@@ -127,13 +127,14 @@ Configure the Windows Wazuh Agent to ingest Sysmon logs so Mimikatz activity is 
             * Remove existing Application/System/Security localfile entries.
 
             * Add:
-              ```
+          
+              ```bash
               <localfile>
                 <location>Microsoft-Windows-Sysmon/Operational</location>
                 <log_format>eventchannel</log_format>
               </localfile>
-             
-   Note: With this change, the agent forwards only Sysmon events to Wazuh Manager.
+     
+             Note: With this change, the agent forwards only Sysmon events to Wazuh Manager.
 
    4. Restart the Wazuh Agent service on Windows:
 
@@ -143,7 +144,107 @@ Configure the Windows Wazuh Agent to ingest Sysmon logs so Mimikatz activity is 
 
         * In Wazuh Dashboard: Explore > Discover.
 
-        * Search for “sysmon” and confirm events are present.
+        * Search for “sysmon” and confirm events are preseent.
+
+### Enable Full Log Archiving on Wazuh Manager
+
+By default, Wazuh primarily exposes events that match rules. Enable full archiving to retain all events for hunting and for rules that key on detailed fields.
+
+   1. Edit Wazuh Manager config:
+
+        * SSH to the Wazuh server and type in :
+
+            ```bash
+            sudo nano /var/ossec/etc/ossec.conf
+
+        * Apply changes to enable log archiving.
+      
+          <img width="833" height="523" alt="image" src="https://github.com/user-attachments/assets/6e182b78-40b0-411b-b045-347be623b861" />
+
+
+   2. Save and restart the manager:
+
+        ```bash
+        sudo systemctl restart wazuh-manager.service
+
+        sudo systemctl status wazuh-manager.service
+
+With these changes, archived logs are stored under: /var/ossec/logs/archives
+
+### Configure Filebeat to Ship Archives
+
+Ensure Filebeat ships the archived logs so they can be searched in the Wazuh Dashboard.
+
+   1. Edit Filebeat configuration:
+
+        ```bash
+        sudo nano /etc/filebeat/filebeat.yml
+        ```
+        <img width="688" height="614" alt="image" src="https://github.com/user-attachments/assets/e1972381-d723-4e2d-8ab8-89645ee1dfe6" />
+
+
+   2. Restart Filebeat:
+
+        ```bash
+        sudo systemctl restart filebeat
+
+### Create an Archives Index Pattern
+
+Create a dedicated index pattern to search all archived logs, not only alerts.
+
+   1. In Wazuh Dashboard:
+
+        * Navigate to: Dashboard Management > Index Patterns > Create Index Pattern.
+
+        * Give the name: wazuh-archives-*
+      
+          <img width="1717" height="460" alt="2025-08-21_00-56" src="https://github.com/user-attachments/assets/17dfcbe3-9c80-4b4c-93a0-6d7a8e56c0f2" />
+
+        * Select Time field: timestamp.
+          
+        * Create the index pattern.
+
+   2. Validate:
+
+        * Re-run Mimikatz on the Windows agent.
+
+        * In Discover, switch index to wazuh-archives-* and confirm Sysmon events showing Mimikatz execution are visible.
+          
+          <img width="1904" height="855" alt="2025-08-11_22-24" src="https://github.com/user-attachments/assets/8b975d1a-9ee2-4eb2-afef-6438b53f549c" />
+
+### Custom Alert Rule for Mimikatz
+
+Create a local custom rule to alert on Mimikatz, including renamed binaries via the originalFileName field.
+
+  * In the Wazuh Manager navigate to: Wazuh Dashboard > Server Management > Rules > Custom Rules.
+
+  * Edit the local_rules.xml by adding the rule (ensure correct indentation):
+    
+  ```bash
+  <rule id="100002" level="15">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.originalFileName" type="pcre2">(?i)mimikatz.exe</field>
+    <description>Mimikatz Usage Detected</description>
+    <mitre>
+      <id>T1003</id>
+    </mitre>
+  </rule>
+ ```
+   <img width="921" height="808" alt="2025-08-11_23-54" src="https://github.com/user-attachments/assets/038649a6-c6dd-44de-abcb-ec61ec97b0f1" />
+
+ * Save changes and confirm restart when prompted.
+
+### Testing
+
+   * Rename mimikatz.exe to a different filename, here I named catsandcows.exe.
+
+   * Execute it on PowerShell on the Windows host.
+
+   * In Wazuh Dashboard, navigate to Threat Intelligence> Threat Hunting> Events
+     
+     <img width="1910" height="988" alt="2025-08-12_01-12" src="https://github.com/user-attachments/assets/d2d8b65a-4f63-42b0-a267-33903607987a" />
+
+       Renamed Mimikatz is successfully detected by our custom rule.
 
 
 
