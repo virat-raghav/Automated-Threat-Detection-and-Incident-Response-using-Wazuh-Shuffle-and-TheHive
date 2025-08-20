@@ -25,7 +25,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 * VirusTotal – Online malware scanning and threat intelligence service that enriches IOCs (Indicators of Compromise) by analyzing files, URLs, and domains with multiple antivirus engines.
 
 ## Flow Diagram
-![Flow_Diagram](https://github.com/user-attachments/assets/905e35dd-bc8b-47ba-be1e-11596c3549a0)
 
+![FlowDiagram](https://github.com/user-attachments/assets/bed03f2b-5c0b-477d-a210-6745fef85da1)
 
 
