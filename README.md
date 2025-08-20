@@ -42,7 +42,17 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
  
    ```bash
    sysmon64.exe -i sysmonconfig.xml
-   ```
+   
+ ### Downloading Mimikatz
+To download mimikatz to our agent, exclude the Downloads folder from Windows Defender scans. 
+
+Go to Windows Security > Virus & threat protection > Manage Settings > Add or remove exclusions > Add an exclusion and select the Downloads folder.
+
+Download it from: [Mimikatz](https://github.com/gentilkiwi/mimikatz/releases) 
+
+Open the directory where Mimikatz is downloaded on the powershell terminal and execute it:
+
+    .\mimikatz.exe
 
 ## Wazuh Setup
 
