@@ -56,7 +56,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
  2. Update and upgrade the system:
 
-    ```
+    ```bash
     sudo apt update && sudo apt upgrade -y
     ```
     
@@ -64,7 +64,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
     Run the following command to download and install Wazuh:
 
-    ```
+    ```bash
     curl -so wazuh-install.sh https://packages.wazuh.com/4.3/wazuh-install.sh && bash ./wazuh-install.sh -a
     ```
     
@@ -74,7 +74,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
     Open your browser and navigate to:
 
-    ```
+    ```bash
     https://<your_ubuntu_server_ip>
     ```
     
