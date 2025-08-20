@@ -44,3 +44,58 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
    sysmon64.exe -i sysmonconfig.xml
    ```
 
+## Wazuh Setup and Configuration
+
+ 1. Create a new Ubuntu 22.04 Server VM with the minimum following specs:
+
+    CPU: 2 cores
+
+    Memory: 2 GB
+
+    Storage: 75 GB
+
+ 2. Update and upgrade the system:
+
+    ```
+    sudo apt update && sudo apt upgrade -y
+
+ 3. Install Wazuh Manager
+
+    Run the following command to download and install Wazuh:
+
+    ```
+    curl -so wazuh-install.sh https://packages.wazuh.com/4.3/wazuh-install.sh && bash ./wazuh-install.sh -a
+    ```
+    Once installation completes, note down the default credentials provided.
+
+4. Access the Wazuh Console
+
+    Open your browser and navigate to:
+
+    ```
+    https://<your_ubuntu_server_ip>
+    ```
+    Log in using the default credentials.
+
+5. Deploy a New Agent (Windows Client)
+
+    * In the Wazuh Console, go to “Deploy new agent”. Select Windows option.
+
+    * Enter the Wazuh Manager IP address as server address.
+
+    * Copy the agent installation command provided by Wazuh.
+    
+    <img width="1567" height="589" alt="2025-08-20_19-44" src="https://github.com/user-attachments/assets/97e875d1-31d4-4417-9e27-55b0f863e75a" />
+
+    On your Windows client, open PowerShell as Administrator and run the copied command to install the Wazuh Agent.
+
+7. Verify the Agent Connection
+
+    * Return to the Wazuh Console.
+
+    * Refresh the Agents view — you should now see the Windows client listed as a connected agent.
+
+      <img width="1908" height="744" alt="2025-08-09_22-56" src="https://github.com/user-attachments/assets/1a7c6b14-7dd5-4291-956d-a8383730c190" />
+
+
+
