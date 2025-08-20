@@ -56,7 +56,10 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
  2. Update and upgrade the system:
 
- 
+    ```
+    sudo apt update && sudo apt upgrade -y
+    ```
+    
  3. Install Wazuh Manager
 
     Run the following command to download and install Wazuh:
@@ -64,6 +67,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
     ```
     curl -so wazuh-install.sh https://packages.wazuh.com/4.3/wazuh-install.sh && bash ./wazuh-install.sh -a
     ```
+    
     Once installation completes, note down the default credentials provided.
 
 4. Access the Wazuh Console
@@ -73,6 +77,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
     ```
     https://<your_ubuntu_server_ip>
     ```
+    
     Log in using the default credentials.
 
 5. Deploy a New Agent (Windows Client)
@@ -87,7 +92,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
     On your Windows client, open PowerShell as Administrator and run the copied command to install the Wazuh Agent.
 
-7. Verify the Agent Connection
+6. Verify the Agent Connection
 
     * Return to the Wazuh Console.
 
