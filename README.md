@@ -28,4 +28,19 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
 ![FlowDiagram](https://github.com/user-attachments/assets/bed03f2b-5c0b-477d-a210-6745fef85da1)
 
+## Windows Client Setup
+
+* Download the Windows ISO file and set up a Windows 10 Pro virtual machine.
+
+* Download Sysmon from the Microsoft Sysinternals website: [Sysmon](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
+
+* Download a recommended Sysmon configuration file from Olaf Hartong’s repository: [sysmonconfig.xml](https://github.com/olafhartong/sysmon-modular/blob/master/sysmonconfig.xml)
+
+* Place both Sysmon.zip (after extracting) and sysmonconfig.xml in the same directory.
+
+* Open PowerShell as Administrator. Navigate to the directory where Sysmon was extracted. Run the following command to install Sysmon with the configuration file:
+ 
+   ``` 
+   sysmon64.exe -i sysmonconfig.xml
+   ```
 
