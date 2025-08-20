@@ -44,7 +44,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
    sysmon64.exe -i sysmonconfig.xml
    ```
 
-## Wazuh Setup and Configuration
+## Wazuh Setup
 
  1. Create a new Ubuntu 22.04 Server VM with the minimum following specs:
 
@@ -100,5 +100,53 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
       <img width="1908" height="744" alt="2025-08-09_22-56" src="https://github.com/user-attachments/assets/1a7c6b14-7dd5-4291-956d-a8383730c190" />
 
+## Wazuh Configuration
 
+This section configures telemetry collection, archives full logs for hunting, and creates a custom rule to alert on Mimikatz activity, even when the binary is renamed.
+
+### Agent Telemetry via Sysmon
+
+Configure the Windows Wazuh Agent to ingest Sysmon logs so Mimikatz activity is captured with rich process telemetry.
+
+  1. Edit the agent config:
+
+        * Open: C:\Program Files (x86)\ossec-agent\ossec.conf
+
+        * Use a text editor (e.g., Notepad as Administrator).
+
+   2. Get the Sysmon channel name:
+
+        * Event Viewer > Applications and Services Logs > Microsoft > Windows > Sysmon > Operational > Properties.
+
+        * Copy Full Name: Microsoft-Windows-Sysmon/Operational.
+
+   3. Configure Log Analysis to use Sysmon:
+
+        * In ossec.conf, in the Log Analysis section:
+
+            * Remove existing Application/System/Security localfile entries.
+
+            * Add:
+              ```
+              <localfile>
+                <location>Microsoft-Windows-Sysmon/Operational</location>
+                <log_format>eventchannel</log_format>
+              </localfile>
+             
+   Note: With this change, the agent forwards only Sysmon events to Wazuh Manager.
+
+   4. Restart the Wazuh Agent service on Windows:
+
+        * Open Services, restart the Wazuh agent.
+
+   5. Verify ingestion in Wazuh:
+
+        * In Wazuh Dashboard: Explore > Discover.
+
+        * Search for “sysmon” and confirm events are present.
+
+
+
+
+ 
 
