@@ -40,7 +40,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
 * Open PowerShell as Administrator. Navigate to the directory where Sysmon was extracted. Run the following command to install Sysmon with the configuration file:
  
-   ``` 
+   ```bash
    sysmon64.exe -i sysmonconfig.xml
    ```
 
