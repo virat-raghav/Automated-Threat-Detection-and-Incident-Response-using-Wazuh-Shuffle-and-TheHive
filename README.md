@@ -56,10 +56,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
  2. Update and upgrade the system:
 
-    ```
-    sudo apt update && sudo apt upgrade -y
-    ```
-
+ 
  3. Install Wazuh Manager
 
     Run the following command to download and install Wazuh:
@@ -94,7 +91,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
     * Return to the Wazuh Console.
 
-    * Refresh the Agents view — you should now see the Windows client listed as a connected agent.
+    * Refresh the Agents view, you should now see the Windows client listed as a connected agent.
 
       <img width="1908" height="744" alt="2025-08-09_22-56" src="https://github.com/user-attachments/assets/1a7c6b14-7dd5-4291-956d-a8383730c190" />
 
