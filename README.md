@@ -58,6 +58,7 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
 
     ```
     sudo apt update && sudo apt upgrade -y
+    ```
 
  3. Install Wazuh Manager
 
