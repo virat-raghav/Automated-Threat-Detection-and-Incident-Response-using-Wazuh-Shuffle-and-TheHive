@@ -74,7 +74,7 @@ Open the directory where Mimikatz is downloaded on the powershell terminal and e
     
  3. Install Wazuh Manager
 
-    Run the following command to download and install Wazuh:
+    Run the following to download and install Wazuh:
 
     ```bash
     curl -so wazuh-install.sh https://packages.wazuh.com/4.3/wazuh-install.sh && bash ./wazuh-install.sh -a
