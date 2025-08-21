@@ -42,7 +42,8 @@ This project is hosted on-premises using virtual machines managed with QEMU/Virt
  
    ```bash
    sysmon64.exe -i sysmonconfig.xml
-
+   ```
+   
 ### Downloading Mimikatz
 
 To download mimikatz to our agent, exclude the Downloads folder from Windows Defender scans. 
