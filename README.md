@@ -8,9 +8,9 @@ This project demonstrates an integrated security automation pipeline combining W
 
 This project is hosted on-premises using virtual machines managed with QEMU/Virtual Machine Manager. However, it can also be deployed on any major cloud provider. The environment includes:
 
-* Ubuntu 22.04 Server – hosting the Wazuh Manager
+* Ubuntu 24.04 Server – hosting the Wazuh Manager
 
-* Ubuntu 22.04 Server – hosting TheHive
+* Ubuntu 24.04 Server – hosting TheHive
 
 * Windows 10 Pro – used for generating telemetry and simulating attacks
 
@@ -58,7 +58,7 @@ Open the directory where Mimikatz is downloaded on the powershell terminal and e
 
 ## Wazuh Setup
 
- 1. Create a new Ubuntu 22.04 Server VM with the minimum following specs:
+ 1. Create a new Ubuntu Server VM with the minimum following specs:
 
     CPU: 2 cores
 
@@ -257,6 +257,185 @@ Create a local custom rule to alert on Mimikatz, including renamed binaries via 
      <img width="1910" height="988" alt="2025-08-12_01-12" src="https://github.com/user-attachments/assets/d2d8b65a-4f63-42b0-a267-33903607987a" />
 
        Renamed Mimikatz is successfully detected by our custom rule.
+
+## TheHive Setup
+
+Prerequisites (VM Specs)
+
+   * OS: Ubuntu Server (22.04/24.04)
+     
+   * CPU: 2 cores
+
+   * RAM: 3GB
+
+   * Storage: 75GB
+
+Update system first:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+Install Base Dependencies
+
+```bash
+sudo apt install -y wget gnupg apt-transport-https git ca-certificates ca-certificates-java curl software-properties-common python3-pip lsb-release
+```
+Install Java
+
+```bash
+wget -qO- https://apt.corretto.aws/corretto.key | sudo gpg --dearmor -o /usr/share/keyrings/corretto.gpg
+echo "deb [signed-by=/usr/share/keyrings/corretto.gpg] https://apt.corretto.aws stable main" | sudo tee -a /etc/apt/sources.list.d/corretto.sources.list
+sudo apt update
+sudo apt install -y java-common java-11-amazon-corretto-jdk
+echo JAVA_HOME="/usr/lib/jvm/java-11-amazon-corretto" | sudo tee -a /etc/environment
+export JAVA_HOME="/usr/lib/jvm/java-11-amazon-corretto"
+```
+
+Verify the installation by running:
+
+```bash
+java -version
+```
+
+### Install Apache Cassandra
+
+```bash
+wget -qO - https://downloads.apache.org/cassandra/KEYS | sudo gpg --dearmor -o /usr/share/keyrings/cassandra-archive.gpg
+echo "deb [signed-by=/usr/share/keyrings/cassandra-archive.gpg] https://debian.cassandra.apache.org 40x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
+sudo apt update
+sudo apt install -y cassandra
+```
+
+Configure Cassandra by modifying settings within the file (use Ctrl+W to search for keywords):
+
+```bash
+sudo nano /etc/cassandra/cassandra.yaml
+```
+
+Change these following:
+
+   * cluster_name: set a name (e.g., thehive-cluster)
+
+   * listen_address: <TheHive_IP>
+
+   * rpc_address: <TheHive_IP>
+
+   * seeds: "<TheHive_IP>:7000"
+
+Next Save the changes with Ctrl+X and press Y. Now, stop Cassandra server and remove the files located at `/var/lib/cassandra` that came with theHive package installation:
+
+```bash
+sudo systemctl stop cassandra
+sudo rm -rf /var/lib/cassandra/*
+```
+
+Restart the service and ensure it is active and running:
+
+```bash
+sudo systemctl start cassandra
+sudo systemctl enable cassandra
+sudo systemctl status cassandra
+```
+
+<img width="961" height="348" alt="2025-08-21_15-30" src="https://github.com/user-attachments/assets/de6fc7e3-b3ec-4eb1-9465-8a81f2ede99a" />
+
+### Install Elasticsearch
+
+```bash
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+sudo apt install -y apt-transport-https
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+sudo apt update
+sudo apt install -y elasticsearch
+```
+
+Configure Elasticsearch by modifying settings within the file:
+
+```bash
+sudo nano /etc/elasticsearch/elasticsearch.yml
+```
+
+Change these following::
+
+   * cluster.name: e.g., thehive-es
+
+   * node.name: uncomment it
+
+   * network.host: <TheHive_IP>
+
+   * http.port: 9200
+
+   * cluster.initial_master_nodes: ["node-1"]
+
+Save the file. Then start and enable Elasticsearch service and check if it is running:
+
+```bash
+sudo systemctl start elasticsearch
+sudo systemctl enable elasticsearch
+sudo systemctl status elasticsearch
+```
+
+<img width="930" height="310" alt="2025-08-21_15-41" src="https://github.com/user-attachments/assets/5336ee31-99d4-46e8-8428-8c6021bd58f7" />
+
+### Install TheHive 5
+
+```bash
+wget -O /tmp/thehive_5.5.7-1_all.deb https://thehive.download.strangebee.com/5.5/deb/thehive_5.5.7-1_all.deb
+sudo apt install -y /tmp/thehive_5.5.7-1_all.deb
+sudo apt update
+```
+
+Ensure TheHive user owns the storage directory (default: /opt/thp):
+
+```bash
+sudo ls -la /opt/thp
+sudo chown -R thehive:thehive /opt/thp
+```
+
+Configure TheHive by modifying settings within the file:
+
+```bash
+sudo nano /etc/thehive/application.conf
+```
+
+Set:
+
+   * db.janusgraph_hostname = <TheHive_IP>
+
+   * db.janusgraph_cluster-name = <Cassandra_cluster_name_from_cassandra.yaml>
+
+   * index.search_hostname = <TheHive_IP> 
+
+   * application.baseUrl = "http://<TheHive_IP>:9000"
+
+Note: Use http unless you’ve configured TLS/reverse proxy.
+
+Start Services and Verify:
+
+```bash
+sudo systemctl start thehive
+sudo systemctl enable thehive
+sudo systemctl status thehive
+```
+
+<img width="1015" height="281" alt="2025-08-21_16-15" src="https://github.com/user-attachments/assets/efec8579-b9b9-41f3-956e-b85feaea0d48" />
+
+Ensure all services are active:
+
+```bash
+sudo systemctl start cassandra elasticsearch thehive
+sudo systemctl enable cassandra elasticsearch thehive
+sudo systemctl status cassandra elasticsearch thehive
+```
+
+Access TheHive on your browser with:
+
+   * URL: http://<TheHive_IP>:9000
+
+   * Default credentials: admin@thehive.local / secret
+
+<img width="1770" height="713" alt="2025-08-21_16-23" src="https://github.com/user-attachments/assets/2c423c79-0ef4-4fa9-b2a9-29d98b3ea367" />
+
 
 
 
