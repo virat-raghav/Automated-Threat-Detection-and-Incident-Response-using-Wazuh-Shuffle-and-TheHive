@@ -90,7 +90,7 @@ Open the directory where Mimikatz is downloaded on the powershell terminal and e
     https://<your_ubuntu_server_ip>
     ```
     
-    Log in using the default credentials.
+    Login using the default credentials.
 
 5. Deploy a New Agent (Windows Client)
 
