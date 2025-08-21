@@ -69,7 +69,7 @@ Open the directory where Mimikatz is downloaded on the powershell terminal and e
  2. Update and upgrade the system:
 
     ```bash
-    sudo apt update && sudo apt upgrade -y
+    sudo apt update  sudo apt upgrade -y
     ```
     
  3. Install Wazuh Manager
