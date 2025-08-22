@@ -104,7 +104,12 @@ Open the directory where Mimikatz is downloaded on the powershell terminal and e
 
     On your Windows client, open PowerShell as Administrator and run the copied command to install the Wazuh Agent.
 
-6. Verify the Agent Connection
+    Note: If you have any trouble copying the command into powershell, enable Remote Desk Protocol on the Windows machine and rdp into windows using the command:
+
+    ```bash
+    xfreerdp /v:<Windows IP> /u:<user> /p:<password>
+    ```
+7. Verify the Agent Connection
 
     * Return to the Wazuh Console.
 
