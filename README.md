@@ -436,8 +436,210 @@ Access TheHive on your browser with:
 
 <img width="1770" height="713" alt="2025-08-21_16-23" src="https://github.com/user-attachments/assets/2c423c79-0ef4-4fa9-b2a9-29d98b3ea367" />
 
+## Integrating Shuffle (SOAR)
+
+### Create a Workflow in Shuffle
+
+- Sign up and log in to [Shuffle](https://shuffler.io/), then create and name a new Workflow.
+  
+- Drag a Webhook into the canvas and connect it to the “Change Me” function; rename the Webhook to “Wazuh Alerts.”
+  
+  <img width="1271" height="1023" alt="2025-08-12_20-19" src="https://github.com/user-attachments/assets/27569ab5-0516-4801-b198-e0a1786a582f" />
+
+  The Webhook will receive alerts from Wazuh into this workflow.
+  
+- Configure the “Change Me” function:
+  
+  - Find Actions: keep “Repeat back to me.”
+    
+  - Call: remove “Hello World,” click + and choose Runtime Argument so incoming Webhook alerts are echoed back.
+
+    <img width="1291" height="983" alt="2025-08-21_19-46" src="https://github.com/user-attachments/assets/10ebc706-ffee-498f-a3e9-4db3117fa1aa" />
+
+ 
+Save the workflow, then proceed to configure Wazuh.
+
+### Send Wazuh Alerts to Shuffle
+
+- On the Wazuh server, edit ossec.conf and add an integration pointing to the Shuffle Webhook:
+  
+  - Path: /var/ossec/etc/ossec.conf
+    
+  ```bash
+    <integration>
+      <name>shuffle</name>
+      <hook_url>WEBHOOK_URI</hook_url>
+      <rule_id>100002</rule_id>
+      <alert_format>json</alert_format>
+    </integration>
+  ```
+  <img width="1030" height="263" alt="2025-08-21_19-54" src="https://github.com/user-attachments/assets/3bd638e8-dc79-4b6c-9653-04bce72a63cf" />
+
+- This forwards alerts from rule_id 100002 (Mimikatz detected) to Shuffle.
+  
+- Save and restart the Wazuh manager service.
+  
+- Re-run the Mimikatz test (e.g., catsandcows.exe) on the Windows agent to generate an alert.
+
+In Shuffle, click the Webhook and press START, then open Show Executions to confirm events are arriving; the execution arguments should show a Mimikatz-related alert.
+
+<img width="1264" height="1030" alt="2025-08-12_20-21" src="https://github.com/user-attachments/assets/a81beda0-8174-43c9-8eb4-fba8d008a70d" />
+
+### IOC Enrichment with VirusTotal
+
+Extract the SHA256 from the alert and query VirusTotal for a reputation report.
+
+1) Extract SHA256 via Regex
+   
+- Update the “Change Me” step:
+  
+  - Find Actions: set to “Regex capture group”
+    
+  - Input data: choose the hashes field from Runtime Arguments ($exec.text.win.eventdata.hashes).
+    
+  - Regex: SHA256=([A-Fa-f0-9]{64})
+  
+    <img width="1196" height="987" alt="2025-08-12_20-53" src="https://github.com/user-attachments/assets/d07de70e-626a-4f32-ac94-5715673bb684" />
+
+- Test by running “Rerun Workflow” and verify only the SHA256 value is returned.
+  
+  <img width="887" height="483" alt="2025-08-12_20-58" src="https://github.com/user-attachments/assets/23a48cd4-2f6c-4139-a835-7c0873559976" />
 
 
+2) Integrate VirusTotal
+   
+- Obtain the VirusTotal API key from your account.
+  
+- In Shuffle, drag the VirusTotal app into the workflow and complete authentication (VirusTotal API key and URL).
+  
+- Set Find Action to “Get a hash report,” and set Id to the regex value we set before.
+
+  <img width="1183" height="933" alt="2025-08-12_21-15" src="https://github.com/user-attachments/assets/095f057a-5ea6-44bf-b424-286b95436938" />
+  
+- Save and rerun the workflow; the execution should include the VirusTotal file report with reputation details.
+  
+<img width="986" height="761" alt="2025-08-21_20-42" src="https://github.com/user-attachments/assets/8e35e300-49aa-4258-ba49-8be9bc46d716" />
+
+<img width="1543" height="898" alt="2025-08-12_21-30" src="https://github.com/user-attachments/assets/77cadba0-fd0b-440e-b236-df8bed2c77cc" />
+
+### TheHive Integration
+
+1. Prepare TheHive for Alerts
+   
+- Sign in to TheHive at http://<thehive_ip>:9000 and create a new organization to receive alerts from Shuffle.
+  
+- Add two users in this organization:
+  
+  - Normal user (for monitoring):
+    
+    - Login: virat@test.com
+      
+    - Name: virat
+      
+    - Profile: analyst
+      
+  - Service account (for API access from Shuffle):
+    
+    - Login: shuffle@test.com
+      
+    - Name: SOAR
+      
+    - Profile: analyst
+      
+      <img width="1853" height="563" alt="2025-08-22_13-38" src="https://github.com/user-attachments/assets/ff033c47-eab8-4f52-ba25-503f025c0275" />
+
+- Set a password for the virat user: Preview → Set a new password → Confirm.
+  
+- Generate an API key for the shuffle SOAR user: Preview → API Key → Create → Confirm.
+
+### Create Alerts from Shuffle
+
+- In Shuffle, add the TheHive app to the workflow by connecting it to the VirusTotal icon.
+
+- Configure the action:
+  
+  - Find action: Create alert  
+  - Go to Advanced → Body (JSON), remove the existing JSON and add the one below (You can edit to your choice):
+ ```bash
+{
+  "severity": 2,
+  "summary": "Mimikatz detected on host: $exec.text.win.system.computer with process ID: $exec.text.win.system.processID and the command Line: $exec.text.win.eventdata.commandLine",
+  "tags": ["T1003"],
+  "title": "$exec.title",
+  "description": "Mimikatz detected on host: $exec.text.win.system.computer and user: $exec.text.win.eventdata.user",
+  "date": "$exec.text.win.eventdata.utcTime",
+  "flag": false,
+  "pap": 2,
+  "source": "Wazuh",
+  "sourceRef": "$exec.rule_id",
+  "status": "New",
+  "tlp": 2,
+  "type": "internal"
+}
+```
+
+### Enable External Access to TheHive (ngrok workaround)
+
+ Shuffle won't reach TheHive on port 9000 on your LAN so expose it via ngrok:  
+ 
+- Create an account in the [ngrok](https://dashboard.ngrok.com/login) website and follow these steps:
+ 
+  - To Install:
+    
+    ```bash
+    snap install ngrok
+    ```
+     
+  - You get the authentication token, use it to authenticate ngrok:
+    
+    ```bash
+     ngrok config add-authtoken <token>
+    ```
+    
+  - Allow LAN access to 9000 (optional, adjust CIDR as needed):
+
+   ```bash 
+    sudo ufw allow from <192.168.1.0/24> to any port 9000 proto tcp
+   ```
+  - Start tunnel: ngrok http <thehive_ip>:9000
+
+    <img width="1141" height="399" alt="2025-08-22_15-10" src="https://github.com/user-attachments/assets/c54b2603-9ba1-4627-bcff-152d2d88403f" />
+
+- In Shuffle’s TheHive app settings, use the ngrok URL and authenticate with the API key from the shuffle SOAR user.
+  
+  <img width="1248" height="865" alt="2025-08-22_15-18" src="https://github.com/user-attachments/assets/bfe3f333-dd49-4325-a805-d2f50dac55c4" />
+
+   Note: Without a static ngrok domain, the URL must be updated each time ngrok restarts.
+
+- Log in to TheHive as virat@test.com and rerun the Shuffle workflow to see the alerts in thehive instance.
+  
+  <img width="1858" height="1045" alt="2025-08-22_13-42" src="https://github.com/user-attachments/assets/2911dab8-4b2d-4de1-924a-ccacae1f7114" />
+
+  <img width="1371" height="719" alt="2025-08-19_13-08" src="https://github.com/user-attachments/assets/9ad78e7b-b04a-4f07-8692-6e3441b61448" />
+
+  The alerts appear successfully  in TheHive for the Mimikatz detection.
+
+### Notify Analysts by Email
+
+- Add the Email app to the Shuffle workflow (after VirusTotal/TheHive as desired).
+  
+- Configure:
+  
+  - Recipients: analyst email address (I used a disposable mail from [DisposableMail](https://www.disposablemail.com/))
+    
+  - Subject/Body: customize with key IOC details and host/user context
+ 
+- The final Workflow should look like this:
+
+  <img width="1351" height="987" alt="2025-08-22_16-06" src="https://github.com/user-attachments/assets/5acc9455-d509-40cb-b5f5-02cee58f391e" />
+     
+- Save the workflow and rerun.
+
+   <img width="1515" height="641" alt="2025-08-19_15-18" src="https://github.com/user-attachments/assets/5c8b7eee-d207-4d63-9393-c0dfa6882d3d" />
+
+- Verify delivery in Shuffle’s execution logs and confirm receipt in the email inbox.
+
+<img width="635" height="206" alt="2025-08-19_15-19" src="https://github.com/user-attachments/assets/e52ad52f-9f26-4e54-a1bd-8402f0a480f7" />
 
 
  
