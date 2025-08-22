@@ -473,6 +473,7 @@ Save the workflow, then proceed to configure Wazuh.
       <alert_format>json</alert_format>
     </integration>
   ```
+  
   <img width="1030" height="263" alt="2025-08-21_19-54" src="https://github.com/user-attachments/assets/3bd638e8-dc79-4b6c-9653-04bce72a63cf" />
 
 - This forwards alerts from rule_id 100002 (Mimikatz detected) to Shuffle.
@@ -524,7 +525,7 @@ Extract the SHA256 from the alert and query VirusTotal for a reputation report.
 
 ### TheHive Integration
 
-1. Prepare TheHive for Alerts
+Prepare TheHive for Alerts:
    
 - Sign in to TheHive at http://<thehive_ip>:9000 and create a new organization to receive alerts from Shuffle.
   
@@ -558,8 +559,10 @@ Extract the SHA256 from the alert and query VirusTotal for a reputation report.
 
 - Configure the action:
   
-  - Find action: Create alert  
+  - Find action: Create alert
+    
   - Go to Advanced → Body (JSON), remove the existing JSON and add the one below (You can edit to your choice):
+ 
  ```bash
 {
   "severity": 2,
@@ -641,6 +644,16 @@ Extract the SHA256 from the alert and query VirusTotal for a reputation report.
 
 <img width="635" height="206" alt="2025-08-19_15-19" src="https://github.com/user-attachments/assets/e52ad52f-9f26-4e54-a1bd-8402f0a480f7" />
 
+## Final Thoughts
 
- 
+This workflow can be extended to cover additional attack scenarios, such as SSH brute-force attempts, across any endpoint running the Wazuh agent. Events flow from the endpoint to the Wazuh Manager, are forwarded to Shuffle for automated processing and enrichment, then create alerts in TheHive and notify the Security Analyst by email. The workflow can be enhanced with analyst-driven actions: include an email prompt or approval step to decide whether to block the attacker’s IP. Upon approval, the analyst is redirected to the Shuffle workflow to continue the response, which then uses the Wazuh integration to execute a containment action. The Wazuh node issues a command to the targeted Ubuntu agent to create an iptables rule that drops traffic from the attacker’s IP, closing the loop from detection to decision to automated remediation.
 
+## Sources
+
+- [Mydfir Channel](https://www.youtube.com/@MyDFIR)
+
+- [Wazuh Documentation](https://documentation.wazuh.com/current/index.html)
+  
+- [TheHive Documentation](https://docs.strangebee.com/)
+  
+- [Shuffle Documentation](https://shuffler.io/docs/about)
